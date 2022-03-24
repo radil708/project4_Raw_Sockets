@@ -1,0 +1,42 @@
+- Need to crate 2 sockets
+	> One to send data (SOCK_RAW/IPPROTO_RAW)
+	> One to receive data (SOCK_RAW/IPPROTO_TCP)
+-  Need to filt the incoming packets to isolate the ones that
+	belong to your program. All other packets can be ignored
+	by your program. This is because receive socket receives ALL
+	packets sent to computer
+
+- IMPLEMENT IP packet feautures
+	> Verify checksums for incoming TCP packets
+	> generate correct checksums for outgoing packets
+	> select a valid local port to send traffic on.
+		TCP HTTP uses port 80
+	> perform the three-way handshake
+	> correctly handle connection teardown
+	> handle sequence and acknowledgement numbers
+	> include basic timeout functionality: if a packet is not
+		ACKed within 1 minute, assume the packet is lost
+		and retransmit it
+	> receive out-of-order incoming packets and put them
+		back into the correct order before delivering them to the
+		higher-level, HTTP handling code
+	> identify and discard duplicate packets
+	>  implement a basic congestion window: your code should start
+		with cwnd=1, and increment the cwnd after each succesful
+		ACK, up to a fixed maximum of 1000 (e.g. cwnd must be
+		<=1000 at all times)
+		 If your program observes a packet drop or a timeout,
+		 reset the cwnd to 1.
+
+- Needs to work on a stock Ubuntu Linux 20.04 machine
+	to check ubuntu version use command: lsb_release -a
+
+
+HOW? ASK TA?
+ need to make one change to iptables in order to
+ complete this assignment. You must set a rule in iptables
+ that drops outgoing TCP RST packets, using the following command:
+ % iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP
+
+ 173.76.224.195
+ inet which is 192.168.56.1
