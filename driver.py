@@ -11,8 +11,8 @@ def main():
 
     source_ip = None
     if option == 0:
-        drop_tcp_rst_cmd = "iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP"
-        os.system(drop_tcp_rst_cmd)
+        #drop_tcp_rst_cmd = "iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP"
+        #os.system(drop_tcp_rst_cmd)
         source_ip = fetch_address_data_linux()
 
     else:
