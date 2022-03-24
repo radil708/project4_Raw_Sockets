@@ -7,8 +7,8 @@ from project4_helper_functions import *
 from os import system
 
 def main():
-    option = 1
-    
+    option = 0
+
     source_ip = None
     if option == 0:
         drop_tcp_rst_cmd = "iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP"
