@@ -12,7 +12,7 @@ class raw_socket():
             exit(1)
 
         try:
-            self.socket_rcvr =  socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
+            self.socket_rcvr = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
         except:
             print("ERROR: receiver socket could not be created")
 

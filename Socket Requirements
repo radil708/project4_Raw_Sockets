@@ -37,6 +37,3 @@ HOW? ASK TA?
  complete this assignment. You must set a rule in iptables
  that drops outgoing TCP RST packets, using the following command:
  % iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP
-
- 173.76.224.195
- inet which is 192.168.56.1
