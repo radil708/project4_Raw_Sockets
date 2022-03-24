@@ -75,7 +75,7 @@ def fetch_address_data_windows(use_default_gateway_ip : bool = True):
 
 def fetch_address_data_linux():
     # start a process and set command to ipconfig
-    cmd_line_process = subprocess.Popen(['ipconfig'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    cmd_line_process = subprocess.Popen(['ifconfig'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     # send the command and get output
     cmd_line_output_bytes, cmd_err_bytes = cmd_line_process.communicate()
 
