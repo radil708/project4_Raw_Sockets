@@ -20,7 +20,7 @@ def main():
         print("Argument must be an int; 0 or 1")
 
     if value_in != 0 and value_in != 1:
-        raise ValueError("Arg can only be 1 (linux) or 0 (windows)")
+        raise ValueError("Arg can only be 0 (linux) or 1 (windows)")
 
     source_ip = None
 
