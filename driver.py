@@ -14,8 +14,15 @@ def main():
     if len(all_args) < 1:
         raise ValueError("Missing Arg, 1: linux, 0: windows")
 
-    if all_args[0] != 0 or all_args[0] != 1:
+    try:
+        value_in = int(all_args[0])
+    except ValueError:
+        print("Argument must be an int; 0 or 1")
+
+    if value_in != 0 and value_in != 1:
         raise ValueError("Arg can only be 1 (linux) or 0 (windows)")
+
+
 
     option = all_args[0]
 
