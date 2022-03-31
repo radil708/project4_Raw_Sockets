@@ -11,6 +11,8 @@ from os import system
 def main():
     all_args = sys.argv[1:]
 
+    #all_args = [1]
+
     if len(all_args) < 1:
         raise ValueError("Missing Arg, 1: linux, 0: windows")
 
@@ -34,7 +36,9 @@ def main():
 
     dest_ip = s.gethostbyname(TEST_HOST_2)
     r = randint(1001, 65535)
-    my_socket = raw_socket(dest_ip,TCP_PORT)
+    my_socket = raw_socket()
+    my_socket.set_sender_socket(TEST_HOST_2, TCP_PORT, display=True)
+    my_socket.close_connection()
 
 
 main()
