@@ -1,6 +1,7 @@
 - Need to crate 2 sockets
 	> One to send data (SOCK_RAW/IPPROTO_RAW)
 	> One to receive data (SOCK_RAW/IPPROTO_TCP)
+- When making make file include sudo
 -  Need to filt the incoming packets to isolate the ones that
 	belong to your program. All other packets can be ignored
 	by your program. This is because receive socket receives ALL

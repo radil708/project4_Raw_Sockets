@@ -15,6 +15,9 @@ class raw_socket():
 
     def set_sender_socket(self,host_name, port_in,display=False):
         host_in = S.gethostbyname(host_name)
+        self.dest_ip = host_in
+        self.port = port_in
+
         try:
             self.socket_sender.connect((host_in, port_in))
         except:
@@ -35,8 +38,11 @@ class raw_socket():
         self.source_ip = src_ip_in
         self.dest_ip = dest_ip_in
 
-    def close_connection(self):
+    def close_connection(self,display=False):
         self.socket_sender.close()
         self.socket_rcvr.close()
+
+        if display == True:
+            print("socket connection closed")
 
 
