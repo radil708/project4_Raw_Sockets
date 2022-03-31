@@ -12,13 +12,24 @@ class tcp_packet:
         self.source_port = source_port
         self.dest_ip = dest_ip
         self.dest_port = dest_port
-        
-        self.packet_length = 0
-        self.syn = 0
-        self.ack = 0
-        self.seq_num = 0
-        self.checksum = 0
 
+        #TCP Headers
+        self.seq_num = 0
+        self.ack_seq = 0
+        self.doff = 5
+        self.fin = 0
+        self.syn = 1
+        self.rst = 0
+        self.psh = 0
+        self.ack = 0
+        self.urg = 0
+        self.window = 16384 # TEXTBOOK VALUE - TA
+        self.check = 0 # filled by pseudo header
+        self.urg_ptr = 0
+
+    def tcp_checksum(self):
+        pass
+    
     def set_headers(self):
         # seq_num, ack_num, offset, 
         # offset, reserved, tcp_flags, window
@@ -39,3 +50,5 @@ class tcp_packet:
         # header + tcp_header + data
         pass
 
+    def pack_packet(self):
+        struct.pack(self.source_port, self.dest_port, self.seq_num, self.ack_num)

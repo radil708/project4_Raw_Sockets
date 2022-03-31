@@ -2,6 +2,7 @@ import socket as S
 from socket import AF_INET, SOCK_RAW, IPPROTO_RAW
 from project_constants import DOUBLE_LINE_DIVIDER
 from tcp_packets import tcp_packet
+import struct
 
 class raw_socket():
 
@@ -21,7 +22,7 @@ class raw_socket():
 
         self.connect_sender_socket(display)
         self.threeway_handshake()
-        
+
     def connect_sender_socket(self, display=False):
         try:
             self.socket_sender.connect((self.dest_ip, self.dest_port))
@@ -67,7 +68,7 @@ class raw_socket():
         packet1 = tcp_packet(self.source_ip, self.source_port, self.dest_ip, self.dest_port)
         packet1.syn = 1
         self.curr_seq_num = self.curr_seq_num + 1
-        packet1.set_seq_num(self.curr_seq_num)
+        packet1.set_seq_numg(self.curr_seq_num)
 
         # packet 2 from hostB -> hostA
         packet2 = tcp_packet(self.source_ip, self.source_port, self.dest_ip, self.dest_port)
