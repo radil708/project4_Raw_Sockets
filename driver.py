@@ -34,10 +34,8 @@ def main():
     else:
         source_ip = fetch_address_data_windows(False)
 
-    dest_ip = s.gethostbyname(TEST_HOST_2)
-    r = randint(1001, 65535)
-    my_socket = raw_socket()
-    my_socket.set_sender_socket(TEST_HOST_2, TCP_PORT, display=True)
+    source_port = randint(1001, 65535)
+    my_socket = raw_socket(TEST_HOST_2, TCP_PORT, source_ip, source_port, display=True)
     my_socket.close_connection()
 
 
