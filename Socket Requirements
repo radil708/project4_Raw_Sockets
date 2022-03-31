@@ -1,12 +1,12 @@
-- Need to crate 2 sockets
+- Need to create 2 sockets
 	> One to send data (SOCK_RAW/IPPROTO_RAW)
 	> One to receive data (SOCK_RAW/IPPROTO_TCP)
--  Need to filt the incoming packets to isolate the ones that
+-  Need to fill the incoming packets to isolate the ones that
 	belong to your program. All other packets can be ignored
 	by your program. This is because receive socket receives ALL
 	packets sent to computer
 
-- IMPLEMENT IP packet feautures
+- IMPLEMENT TCP/IP packet features
 	> Verify checksums for incoming TCP packets
 	> generate correct checksums for outgoing packets
 	> select a valid local port to send traffic on.

@@ -83,4 +83,5 @@ def fetch_address_data_linux():
     info_list = (cmd_line_output_str.split("\n"))[1].split(" ")
     return info_list[1]
 
-
+def checksum():
+    

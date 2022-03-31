@@ -1,13 +1,22 @@
 import socket as S
-from socket import AF_INET, SOCK_RAW, IPPROTO_RAW
+from socket import AF_INET, SOCK_RAW, IPPROTO_RAW, socket
 from project_constants import DOUBLE_LINE_DIVIDER
+import sys
 
 class raw_socket():
 
     def __init__(self):
+        try:
+            self.socket_sender = S.socket(AF_INET, SOCK_RAW, IPPROTO_RAW)
+        except S.error as e:
+            print('Could not create sender socket')
+            sys.exit()
 
-        self.socket_sender = S.socket(AF_INET, SOCK_RAW, IPPROTO_RAW)
-        self.socket_rcvr = S.socket(S.AF_INET, S.SOCK_RAW, S.IPPROTO_TCP)
+        try:
+            self.socket_rcvr = S.socket(S.AF_INET, S.SOCK_RAW, S.IPPROTO_TCP)
+        except S.error as e:
+            print('Could not create receiver socket')
+            sys.exit()
 
         self.source_ip = None
         self.dest_ip = None
@@ -38,5 +47,6 @@ class raw_socket():
     def close_connection(self):
         self.socket_sender.close()
         self.socket_rcvr.close()
+
 
 
