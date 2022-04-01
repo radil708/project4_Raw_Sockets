@@ -1,5 +1,6 @@
 import struct
 import binascii
+import all_escapes
 
 def split_16bit_to_28bit(val_int):
     c = (val_int >> 8) & 0xff
@@ -203,8 +204,10 @@ def main():
 
 def main_2():
     version_ihl_bytes_out = ((4 << 4) + 5)  # 8 bits
+    print(struct.pack('!b',version_ihl_bytes_out))
     print(bin(version_ihl_bytes_out << 8))
-    seg_1 = (version_ihl_bytes_out << 8) + 0
+    seg_1 = (version_ihl_bytes_out << 7) + 40
+    print(bin(seg_1))
 
     # fill up the 3 bits as a 4 bit value
     full_flags = 0 + (0<< 2) + (0 << 1) \
@@ -213,6 +216,7 @@ def main_2():
     # 8 bytes
     flag_offset_bytes_out = int(format(((full_flags << 13) + 0),'016b'))  # 16 bits
 
+    print("what",0x28)
     first_16 = seg_1
     print("first", bin(first_16))
     second_16 = 40
@@ -221,15 +225,68 @@ def main_2():
     print("yo",bin(third_16))
     fourth_16 = flag_offset_bytes_out
     fifth_16 = (40 << 4) + 6
+    print(bin(fifth_16))
     print("fifth", bin(fifth_16))
     print(bin(first_16) + bin(second_16))
     #fifth_16 = (40 << ) + 6
-    checksum = int(first_16) + int(second_16) + int(third_16) + int(fourth_16) + int(fifth_16)
-    print(bin(checksum))
-    print(struct.pack('!H',checksum))
-    print("\xa6ec")
+    a = struct.pack('!HHHHH', first_16, second_16, third_16, fourth_16, fifth_16)
+    print(a)
+    print(0x28)
+    #print(ord(checksum))
+    #print(struct.pack('!H',checksum))
 
     #seg_2 = (0 << 32) + flag_offset_bytes_out
+    print(0x45)
 
-main_2()
+def main_3():
+    v= 4
+    ihl = 5
+
+    # make 8 bits fo v and ihl
+    v_ihl = (4 << 4) + 5
+
+    service = 0
+    total_len = 40
+    # correct
+    a = struct.pack('!BBH',v_ihl,service,total_len)
+
+    print(a)
+    print(a.decode('all-escapes'))
+
+    #======================================
+    id = 43981
+    # fill up the 3 bits as a 4 bit value
+    full_flags = 0 + (0 << 2) + (0 << 1) \
+        # convert to a 3 bit value
+    full_flags = (full_flags >> 1)
+    flag_frag = (full_flags << 13) + 0
+
+    b = struct.pack('!HH',id,flag_frag)
+
+    print(b.decode('all-escapes'))
+
+    #===================================
+    ttl = 40
+    protocol = 6
+    #print(bin(64))
+    a = 64
+    #get bitlength and shift until total is 16
+    #print(a.bit_length())
+    #print(7 + 9)
+    #print(bin((64 << 9)))
+    ttl_p = (64 << 8) + 6
+    print(bin(ttl_p))
+    c = struct.pack('!HH',ttl_p,42732)
+    print(c.decode('all-escapes'))
+
+    d = struct.unpack('!H', b'\xa6\xec')
+    print(bin(d[0]))
+    print(d[0])
+
+
+
+main_3()
+
+
+
 
