@@ -80,7 +80,7 @@ class raw_socket():
             
     def receive_packet(self):
         self.socket_rcvr.timeout(60)
-        info_recvd = self.socket_rcvr.recvfrom(65535)
+        info_recvd = self.socket_rcvr.recv(65535)
         
         print("got from dest", info_recvd)
         #packet = info_recvd[0]
