@@ -46,7 +46,7 @@ class raw_socket():
         return tcp_header(self.source_ip, self.source_port, self.dest_ip, self.dest_port)
 
     def get_basic_ip_hdr(self):
-        return ip_header(self.source_ip, self.source_port, self.dest_ip, self.dest_port)
+        return ip_header(self.source_ip, self.dest_ip)
     
     def create_packet_to_send(self, data, syn_val, seq_num, ack_val, ack_num):
         ip_hdr = self.get_basic_ip_hdr().assemble_ip_header()
@@ -102,7 +102,7 @@ class raw_socket():
         elif (header[6] == 17):
             protocol = "UDP"
         
-        seq_num, ack_num = 0,0
+        seq_num, ack_num = 0, 0
         # get the seq_num
         # get the ack_num
         return seq_num, ack_num
