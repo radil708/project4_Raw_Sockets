@@ -56,7 +56,10 @@ class tcp_header:
         
         # loop taking 2 characters at a time
         for i in range(0, len(msg), 2):
-            w = ord(msg[i]) + (ord(msg[i + 1]) << 8)
+            #w = ord(msg[i]) + (ord(msg[i + 1]) << 8)
+            w = msg[i]
+            if i + 1 < len(msg):
+                w+= msg[i+1] << 8
             csum = csum + w
         
         csum = (csum >> 16) + (csum & 0xffff)
@@ -68,7 +71,7 @@ class tcp_header:
         return csum
 
     def get_pseudoheader(self):
-        user_data = 'Hello, how are you'
+        user_data = ''
 
         # pseudo header fields
         source_address = socket.inet_aton(self.source_ip)
@@ -78,7 +81,7 @@ class tcp_header:
         tcp_length = len(self._tcp_header) + len(user_data)
 
         psh = struct.pack('!4s4sBBH', source_address, dest_address, placeholder, protocol, tcp_length)
-        psh = psh + self._tcp_header + user_data
+        psh = psh + self._tcp_header + struct.pack(user_data)
 
         return psh
 

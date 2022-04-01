@@ -17,6 +17,9 @@ class raw_socket():
         self.source_ip = source_ip
         self.dest_ip = S.gethostbyname(host_name)
 
+        print('source ip:', source_ip)
+
+
         self.source_port = source_port
         self.dest_port = dest_port
 
@@ -59,10 +62,10 @@ class raw_socket():
 
         ftcp_hdr = tcp_hdr.assemble_tcp_header()
 
-        return ip_hdr + ftcp_hdr + data
+        return ip_hdr + ftcp_hdr + struct.pack(data)
     
-    def send_packet(self, data):
-        packet = self.create_packet_to_send(data)
+    def send_packet(self, packet):
+        #packet = self.create_packet_to_send(data)
 
         # increase count to send more packets
         #count = 3
@@ -71,29 +74,30 @@ class raw_socket():
         print('sending packet...')
         # Send the packet finally - the port specified has no effect
         # put this in a loop if you want to flood the target 
-        self.socket_sender.sendto(packet, (self.dest_ip, 0))	
+        self.socket_sender.sendto(packet, (self.dest_ip, self.dest_port))	
         print('send')
         time.sleep(1)
             
-        #print('all packets sent')
-
     def receive_packet(self):
-        info_recvd = self.socket_rcvr.recvfrom(65565)
+        self.socket_rcvr.timeout(60)
+        info_recvd = self.socket_rcvr.recvfrom(65535)
         
         print("got from dest", info_recvd)
-        packet = info_recvd[0]
-        src_address = info_recvd[1]
-        
-        header = struct.unpack('!BBHHHBBH4s4s', packet[:20])
+        #packet = info_recvd[0]
+        #src_address = info_recvd[1]
+        header_size = struct.calcsize('!BBHHHBBH4s4s')
+        print('header size', header_size)
 
+        header = struct.unpack('!BBHHHBBH4s4s', info_recvd[:20])
+        print('unpacked', header)
         if (header[6] == 6):
             protocol = "TCP"
         elif (header[6] == 17):
             protocol = "UDP"
 
         print("Protocol: ", protocol)
-        print("Address: ", src_address)
-        print("Header: ", header)
+        #print("Address: ", src_address)
+        #print("Header: ", header)
         return header
 
     def parse_header_received(self, header):
@@ -102,6 +106,7 @@ class raw_socket():
         elif (header[6] == 17):
             protocol = "UDP"
         
+        #TODO: need to parse out the seq and ack here
         seq_num, ack_num = 0, 0
         # get the seq_num
         # get the ack_num
@@ -109,7 +114,7 @@ class raw_socket():
 
     def threeway_handshake(self):
         # set syn flag = 1 for initiating host
-        initial_seq_num = random.randint(0, 50505)
+        initial_seq_num = random.randint(0, 50505) # this is random seq
         initial_packet = self.create_packet_to_send(data="", syn_val=1, seq_num=initial_seq_num, ack_val=0, ack_num=0)
         self.send_packet(initial_packet)
 
