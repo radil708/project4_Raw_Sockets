@@ -36,6 +36,7 @@ def main():
 
     source_port = randint(1001, 65535)
     my_socket = raw_socket(TEST_HOST_2, TCP_PORT, source_ip, source_port, display=True)
+    #my_socket.threeway_handshake()
     my_socket.close_connection()
 
 
