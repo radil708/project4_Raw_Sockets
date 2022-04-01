@@ -6,22 +6,28 @@ import struct
 
 class raw_socket():
 
-    def __init__(self, host_name, dest_port, source_ip, source_port, display=False):
+    def __init__(self, dest_domain_in : str, dest_port_in : int, source_port_in: int, display : bool=False) -> None:
         # try/except block for each socket creation
-        self.socket_sender = S.socket(AF_INET, SOCK_RAW, IPPROTO_RAW)
-        self.socket_rcvr = S.socket(S.AF_INET, S.SOCK_RAW, S.IPPROTO_TCP)
-        self.host_name = host_name
-        self.source_ip = source_ip
-        self.dest_ip = S.gethostbyname(host_name)
+        try:
+            self.socket_sender = S.socket(AF_INET, SOCK_RAW, IPPROTO_RAW)
+        except:
+            print("ERROR: Unable to create sender socket\nEXITING PROGRAM")
+            exit(1)
 
-        self.source_port = source_port
-        self.dest_port = dest_port
+        try:
+            self.socket_rcvr = S.socket(S.AF_INET, S.SOCK_RAW, S.IPPROTO_TCP)
+        except:
+            print("ERROR: Unable to create receiver socket\nEXITING PROGRAM")
+            exit(1)
 
-        self.curr_seq_num = 0
-        self.curr_ack_num = 0
+        self.dest_domain = dest_domain_in
+        self.source_ip = S.gethostbyname(S.getfqdn())
+        self.dest_ip = S.gethostbyname(dest_domain_in)
+
+        self.source_port = source_port_in
+        self.dest_port = dest_port_in
 
         self.connect_sender_socket(display)
-        self.threeway_handshake()
 
     def connect_sender_socket(self, display=False):
         try:
@@ -29,15 +35,15 @@ class raw_socket():
         except:
             if display == True:
                 print("ERROR: Socket Sender failed to connect:\n"
-                      f"HOST: {self.host_name}\nHOST IP: {self.dest_ip}\nPORT: {self.dest_port}\n" +
+                      f"HOST: {self.dest_domain}\nHOST IP: {self.dest_ip}\nPORT: {self.dest_port}\n" +
                       "EXITING PROGRAM")
             self.close_connection()
             exit(1)
 
         if display == True:
             print(f"Raw TCP Sender Socket Successfully Connected to:"
-                  f"\nHOST: {self.host_name}\nHOST IP: {self.dest_ip}\nPORT: {self.dest_port}\n"+
-                  DOUBLE_LINE_DIVIDER)
+                  f"\nHOST: {self.dest_domain}\nHOST IP: {self.dest_ip}\nPORT: {self.dest_port}\n" +
+                  DOUBLE_LINE_DIVIDER +"\n")
 
 
     def set_socket_values(self,src_ip_in, dest_ip_in):
@@ -49,7 +55,7 @@ class raw_socket():
         self.socket_rcvr.close()
 
         if display == True:
-            print("socket connection closed")
+            print("raw socket connection closed")
 
     def create_packet_to_send(self):
         #initialize packet

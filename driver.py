@@ -9,9 +9,12 @@ from project4_helper_functions import *
 from os import system
 
 def main():
-    all_args = sys.argv[1:]
+    #all_args = sys.argv[1:]
 
-    #all_args = [1]
+    #print(s.gethostbyname(s.gethostname()))
+    #print(s.gethostbyname(s.getfqdn()))
+
+    all_args = [1]
 
     if len(all_args) < 1:
         raise ValueError("Missing Arg, 1: linux, 0: windows")
@@ -24,6 +27,7 @@ def main():
     if value_in != 0 and value_in != 1:
         raise ValueError("Arg can only be 0 (linux) or 1 (windows)")
 
+    '''
     source_ip = None
 
     if value_in == 0:
@@ -33,10 +37,14 @@ def main():
 
     else:
         source_ip = fetch_address_data_windows(False)
+    '''
+
+    #host_ip = s.gethostbyname(s.getfqdn())
+
 
     source_port = randint(1001, 65535)
-    my_socket = raw_socket(TEST_HOST_2, TCP_PORT, source_ip, source_port, display=True)
-    my_socket.close_connection()
+    my_socket = raw_socket(TEST_HOST_2, TCP_PORT, source_port, display=True)
+    my_socket.close_connection(display=True)
 
 
 main()

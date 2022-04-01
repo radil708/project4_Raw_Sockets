@@ -83,4 +83,11 @@ def fetch_address_data_linux():
     info_list = (cmd_line_output_str.split("\n"))[1].split(" ")
     return info_list[1]
 
+def create_tcp_header(source_port_in, dest_port_in, seq_num,
+                      ack_num,header_len, window_size, flags, checksum,urg_ptr,checksum,options,data ):
+    pass
+
+def create_ip_header(version,h_len,s_type,total_len,id,flags,
+                     f_offset,time_to_live,prot,h_checksum,source_ip,dest_ip,option_padding)
+
 

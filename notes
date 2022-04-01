@@ -1,0 +1,4 @@
+data is sent as decimal values
+0x denotes a hexadecimal value
+TCP uses big endian format
+Source port can be no larger the 65,535
