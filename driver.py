@@ -29,12 +29,12 @@ def main():
     if value_in == 0:
         drop_tcp_rst_cmd = "iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP"
         os.system(drop_tcp_rst_cmd)
-        source_ip = s.gethostbyname(s.getfqdn())
+        source_ip = "192.168.81.128"
 
     else:
         source_ip = fetch_address_data_windows(False)
 
-    source_port = randint(1001, 65535)
+    source_port = 21792
     my_socket = raw_socket(TEST_HOST_2, TCP_PORT, source_ip, source_port, display=True)
     #my_socket.threeway_handshake()
     my_socket.close_connection()
