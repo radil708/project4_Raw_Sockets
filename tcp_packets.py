@@ -53,10 +53,11 @@ class tcp_header:
     def tcp_checksum(self, msg):
         # checksum functions needed for calculation checksum
         csum = 0
-        
+        print('msg to calc csum', msg)
         # loop taking 2 characters at a time
         for i in range(0, len(msg), 2):
             #w = ord(msg[i]) + (ord(msg[i + 1]) << 8)
+            print('curr_msg', msg[i])
             w = msg[i]
             if i + 1 < len(msg):
                 w+= msg[i+1] << 8
