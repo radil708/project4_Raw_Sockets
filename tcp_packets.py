@@ -30,20 +30,20 @@ class tcp_header:
         self.tcp_urg = 0
         self.tcp_window = socket.htons(5840)	#maximum allowed window size
 
-        #self.tcp_check = 0
-        #self.tcp_urg_ptr = 0
+        self.tcp_check = 0
+        self.tcp_urg_ptr = 0
 
         self.tcp_offset_res = (self.tcp_doff << 4) + 0
         self.tcp_flags = self.tcp_fin + (self.tcp_syn << 1) + (self.tcp_rst << 2) + \
             (self.tcp_psh <<3) + (self.tcp_ack << 4) + (self.tcp_urg << 5)
 
-        #self.tcp_header = self.assemble_tcp_header()
+        self._tcp_header = self.assemble_tcp_header()
         self.pseudoheader = self.get_pseudoheader()
         self.tcp_check = self.tcp_checksum(self.pseudoheader)
         print("checksum", self.tcp_check)
 
         # make the tcp header again and fill the correct checksum - remember checksum is NOT in network byte order
-        #self.final_tcp_header = self.assemble_tcp_header()
+        self.final_tcp_header = self.assemble_tcp_header()
     
     def assemble_tcp_header(self):
         # the ! in the pack format string means network order
@@ -56,7 +56,7 @@ class tcp_header:
         
         # loop taking 2 characters at a time
         for i in range(0, len(msg), 2):
-            w = ord(msg[i]) + (ord(msg[i+1]) << 8)
+            w = ord(msg[i]) + (ord(msg[i + 1]) << 8)
             csum = csum + w
         
         csum = (csum >> 16) + (csum & 0xffff)
@@ -75,10 +75,10 @@ class tcp_header:
         dest_address = socket.inet_aton(self.dest_ip)
         placeholder = 0
         protocol = socket.IPPROTO_TCP
-        tcp_length = len(self.tcp_header) + len(user_data)
+        tcp_length = len(self._tcp_header) + len(user_data)
 
         psh = struct.pack('!4s4sBBH', source_address, dest_address, placeholder, protocol, tcp_length)
-        psh = psh + self.tcp_header + user_data
+        psh = psh + self._tcp_header + user_data
 
         return psh
 
@@ -113,7 +113,7 @@ class ip_header:
         self.ip_daddr = socket.inet_aton(self.dest_ip)
 
         #self.ip_ihl_ver = (version << 4) + self.ihl
-        self.ip_ihl_ver = (self.ip_ver << 4) + self.ihl       
+        self.ip_ihl_ver = (self.ip_ver << 4) + self.ip_ihl       
     
     def assemble_ip_header(self):
         # the ! in the pack format string means network order
