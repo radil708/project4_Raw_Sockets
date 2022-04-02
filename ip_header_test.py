@@ -1,8 +1,8 @@
 import struct
 import logging
 
-from headers import ip_header
-from headers import packet_parser
+from headers_r import ip_header
+from headers_r import packet_parser
 import unittest
 
 class TestIPHeader(unittest.TestCase):

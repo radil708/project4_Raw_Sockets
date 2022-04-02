@@ -1,5 +1,5 @@
 from struct import pack,unpack
-from headers.ip_header import MAX_4_BIT_INT,MAX_8_BIT_INT,MAX_16_BIT_INT,MAX_13_BIT_INT
+from headers_r.ip_header import MAX_4_BIT_INT,MAX_8_BIT_INT,MAX_16_BIT_INT,MAX_13_BIT_INT
 import socket
 
 MAX_32_BIT_INT = 2147483647
