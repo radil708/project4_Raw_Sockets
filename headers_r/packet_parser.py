@@ -1,131 +1,318 @@
-from struct import pack, unpack
-from headers_r import ip_header
+from struct import pack,unpack
+from headers_r.ip_header import MAX_4_BIT_INT,MAX_8_BIT_INT,MAX_16_BIT_INT,MAX_13_BIT_INT, binary_addition_checksum
+import socket
 
-def split_16_bits_into_two_8_bits(byte_in : bytes):
-    return unpack('!BB',byte_in)
+MAX_32_BIT_INT = 2147483647
 
-#TODO this would be an int so keep in mind
-def split_8bit_int_into_two_4_bits_int(val_in : int):
-    bin_string = bin(val_in)[2:]
+ERROR_STR_APPEND = "FAILED TO CONSTRUCT TCP HEADER\nEXITING PROGRAM"
 
-    if len(bin_string) < 8:
-        bin_string = ("0" * (8-len(bin_string))) + bin_string
+def is_valid_control_flag_val(ctrl_flg_val):
+    if (ctrl_flg_val != 0 and ctrl_flg_val != 1):
+        return False
+    else:
+        return True
 
-    first_4_bit_int = int(bin_string[:4],2)
-    second_4_bit_int = int(bin_string[4:],2)
+def get_val_data_offset_reserve(val_in_do : int, val_reserve_bits : int = 0):
+    if val_in_do.bit_length() < 7:
+        new = (val_in_do << (7 - val_in_do.bit_length()))
 
-    return first_4_bit_int,second_4_bit_int
+    return new
 
-def split_frag_flag_int(val_in : int):
-    new_value = val_in
-    if val_in.bit_length() < 16:
-        new_value = (1<<16) + val_in
+class tcp_header():
+    def __init__(self, src_port_in: int, dest_port_in: int, seq_num: int, ack_num: int, data_offset_in: int,
+                 ack_flag: int,sync_flag: int, window_size_in: int, urg_ptr: int,
+                 read_checksum: int = 0, ns_flag: int = 0, cwr_flag: int = 0 ,
+                 ece_flag: int = 0,urge_flag: int = 0, psh_flag: int = 0,
+                 rst_flag: int = 0, fin_flag: int = 0,):
 
-    bin_string = bin(new_value)[2:]
+        self.calc_checksum_flag = False
 
-
-    flags_string = bin_string[1:4]
-    frag_offset_string = bin_string[4:]
-
-    fragmentation_flag = int(flags_string[1])
-    location_flag = int(flags_string[2])
-    frag_offset_int = int(frag_offset_string,2)
-
-    return fragmentation_flag, location_flag,frag_offset_int
-
-def split_32_bit_int_into_4_8_bits_ints(val_in : int):
-    bin_string = bin(val_in)[2:]
-
-    if len(bin_string) < 32:
-        bin_string = ("0" * (32-len(bin_string))) + bin_string
-
-    first_8_bit_int = int(bin_string[:8], 2)
-    second_8_bit_int = int(bin_string[8:16], 2)
-    third_8_bit_int = int(bin_string[16:24],2)
-    fourth_8_bit_int = int(bin_string[24:],2)
-
-    return first_8_bit_int,second_8_bit_int,third_8_bit_int,fourth_8_bit_int
+        #set up values for pseudo header
+        self.protocol = None
+        self.ip_src = None
+        self.ip_dest = None
+        self.tcp_len = None
 
 
 
-class packet_parser():
+        if src_port_in > MAX_16_BIT_INT:
+            raise ValueError(f'ERROR: src_port cannot be greater than f{MAX_16_BIT_INT}\n' + ERROR_STR_APPEND)
 
-    def parse_ip_packet(self,ip_packet : bytes):
-        # grabs first 16 bit seg
-        bytes_version_ihl_service = ip_packet[:2]
-        int_version_ihl_service = split_16_bits_into_two_8_bits(bytes_version_ihl_service) # tuple of 2 8 bit segments
-        read_version_int, read_ihl_int = split_8bit_int_into_two_4_bits_int(int_version_ihl_service[0]) # tuple of 2 4 bit segments as ints
-        read_service_int = int_version_ihl_service[1]
-
-        #grabs second 16 bit seg
-        bytes_total_length = ip_packet[2:4]
-        read_total_len_int = (unpack('!H',bytes_total_length))[0]
-
-        #grabs 3rd 16 bit seg
-        bytes_id = ip_packet[4:6]
-        read_id_int = (unpack('!H',bytes_id))[0]
-
-        #grabs 4th 16 bit seg
-        bytes_flags_and_frag_offset = ip_packet[6:8]
-        int_flags_and_frag_offset = (unpack('!H',bytes_flags_and_frag_offset))[0]
-        read_frag_flag, read_location_flag, read_frag_offset = split_frag_flag_int(int_flags_and_frag_offset)
-
-        #grab 5th 16 bit seg
-        bytes_ttl_protocol_16 = ip_packet[8:10]
-        read_time_to_live_int, read_protocol_int = split_16_bits_into_two_8_bits(bytes_ttl_protocol_16)
-
-        #grab 6th 16 bit seg
-        bytes_checksum = ip_packet[10:12]
-        read_checksum_int = unpack('!H',bytes_checksum)[0]
-
-        #grab 32 bit seg of source ip
-        bytes_ip_src = ip_packet[12:16]
-        ip_source_32_bit_int = unpack('!L',bytes_ip_src)[0]
-        s1,s2,s3,s4 = split_32_bit_int_into_4_8_bits_ints(ip_source_32_bit_int)
-
-        read_ip_src_str = str(s1) + "." + str(s2) + "." + str(s3) + "." + str(s4)
+        #The sending device’s port.
+        self.port_src = src_port_in
 
 
-        #grab 32 bit seg of dest ip
-        bytes_ip_dest = ip_packet[16:20]
-        ip_dest_32_bit_int = unpack('!L', bytes_ip_dest)[0]
-        d1,d2,d3,d4 = split_32_bit_int_into_4_8_bits_ints(ip_dest_32_bit_int)
+        if dest_port_in > MAX_16_BIT_INT:
+            raise ValueError(f'ERROR: dest_port cannot be greater than f{MAX_16_BIT_INT}\n' + ERROR_STR_APPEND )
 
-        read_ip_dest_str = str(d1) + "." + str(d2) + "." + str(d3) + "." + str(d4)
+        #The receiving device’s port.
+        self.port_dest = dest_port_in
 
-        dict_info = {}
+        if seq_num > MAX_32_BIT_INT:
+            raise ValueError(f'ERROR: seq num cannot be greater than f{MAX_32_BIT_INT}\n' + ERROR_STR_APPEND)
 
-        dict_info['version'] = read_version_int
-        dict_info['ihl'] = read_ihl_int
-        dict_info['service_type'] = read_service_int
-        dict_info['total_len'] = read_total_len_int
-        dict_info['packet_id'] = read_id_int
-        dict_info['fragmentation_flag'] = read_frag_flag
-        dict_info['location_flag'] = read_location_flag
-        dict_info['frag_offset'] = read_frag_offset
-        dict_info['time_to_live'] = read_time_to_live_int
-        dict_info['protocol'] = read_protocol_int
-        dict_info['checksum'] = read_checksum_int
-        dict_info['ip_src'] = read_ip_src_str
-        dict_info['ip_dest'] = read_ip_dest_str
+        # A device initiating a TCP connection must choose a random initial sequence number,
+        # which is then incremented according to the number of transmitted bytes.
+        self.num_seq = seq_num
 
-        return dict_info
+        if ack_num > MAX_32_BIT_INT:
+            raise ValueError(f'ERROR: ack num cannot be greater than f{MAX_32_BIT_INT}\n' + ERROR_STR_APPEND)
 
-    def parse_ip_packet_and_gen(self, ip_packet : bytes):
-        read_values = self.parse_ip_packet(ip_packet)
+        #The receiving device maintains an acknowledgment number starting with zero.
+        # It increments this number according to the number of bytes received.
+        self.num_ack = ack_num
 
-        generated_ip_packet = ip_header(ip_source_in=read_values['ip_src'],
-                                        ip_dest_in=read_values['ip_dest'],
-                                        packet_id_in=read_values['packet_id'],
-                                        frag_flag_input=read_values['fragmentation_flag'],
-                                        location_flag=read_values['location_flag'],
-                                        offset_in=read_values['frag_offset'],
-                                        ttl=read_values['time_to_live'],version_in=read_values['version'],
-                                        ihl_in=read_values['ihl'],service_type_in=read_values['service_type'],
-                                        total_len_in=read_values['total_len'],read_checksum_in=read_values['checksum'])
-        return generated_ip_packet
+        if data_offset_in > MAX_4_BIT_INT:
+            raise ValueError(f'ERROR: data offset cannot be greater than f{MAX_4_BIT_INT}\n' + ERROR_STR_APPEND)
+
+        self.data_offset = data_offset_in
+
+        # reserved 3 bits
+        self.rsv_3_bits = 0
+
+        # 9 control bits/flags
+
+        #experimental flag, leave alone
+        self.ns_flag = ns_flag
+
+        if not is_valid_control_flag_val(ns_flag):
+            raise ValueError('ns flag is not valid\n' + ERROR_STR_APPEND)
+
+        # set when the sending node receives a TCP segment that has the ECE bit turned on.
+        # It is used to indicate to a peer that the congestion window was reduced to
+        # facilitate recovery of an intermediate device
+        # leave alone for now?
+        self.cwr_flag = cwr_flag
+
+        if not is_valid_control_flag_val(cwr_flag):
+            raise ValueError('cwr flag is not valid\n' + ERROR_STR_APPEND)
+
+        #TCP supports ECN using two flags in the TCP header.
+        # The first, ECN-Echo (ECE) is used to echo back the congestion indication
+        # (i.e., signal the sender to reduce the transmission rate).
+        # The second, Congestion Window Reduced (CWR), to acknowledge
+        # that the congestion-indication echoing was received.
+        #leave alone for now
+        self.ece_flag = ece_flag
+
+        if not is_valid_control_flag_val(ece_flag):
+            raise ValueError('ece flag is not valid\n' + ERROR_STR_APPEND)
+
+        #When this bit is set, the data should be treated as priority over other data.
+        # leave at 0 for now?
+        self.urg_flag = urge_flag
+
+        if not is_valid_control_flag_val(urge_flag):
+            raise ValueError('urge flag is not valid\n' + ERROR_STR_APPEND)
+
+        self.ack_flag = ack_flag
+
+        if not is_valid_control_flag_val(ack_flag):
+            raise ValueError('ack flag is not valid\n' + ERROR_STR_APPEND)
+
+        #this is the push function. This tells an application that
+        # the data should be transmitted immediately and
+        # that we don’t want to wait to fill the entire TCP segment.
+        # leaveat 0 for now?
+        self.psh_flag = psh_flag
+
+        if not is_valid_control_flag_val(psh_flag):
+            raise ValueError('psh flag is not valid\n' + ERROR_STR_APPEND)
+
+        #this resets the connection, when you receive this you have to
+        # terminate the connection right away.
+        # This is only used when there are unrecoverable errors and it’s not a
+        # normal way to finish the TCP connection.
+        #leave at 0 for now
+        self.rst_flag = rst_flag
+
+        if not is_valid_control_flag_val(rst_flag):
+            raise ValueError('rst flag is not valid\n' + ERROR_STR_APPEND)
+
+        #we use this for the initial three way handshake
+        # and it’s used to set the initial sequence number.
+        self.syn_flag = sync_flag
+
+        if not is_valid_control_flag_val(sync_flag):
+            raise ValueError('sync flag is not valid\n' + ERROR_STR_APPEND)
+
+        #this bit is used to end the TCP connection. TCP is full duplex so
+        # both parties will have to use the FIN bit to end the connection.
+        # This is the normal method how we end a connection.
+        self.fin_flag = fin_flag
+
+        if not is_valid_control_flag_val(fin_flag):
+            raise ValueError('fin flag is not valid\n' + ERROR_STR_APPEND)
+
+        if window_size_in > MAX_16_BIT_INT:
+            raise ValueError(f"window size cannot be greater than {MAX_16_BIT_INT}\n" + ERROR_STR_APPEND)
+
+        self.window_size = window_size_in
+
+        if urg_ptr > MAX_16_BIT_INT:
+            raise ValueError(f"urgent pointer cannot be greater than {MAX_16_BIT_INT}\n" + ERROR_STR_APPEND)
+
+        self.urg_ptr = urg_ptr
+
+        self.read_checksum = read_checksum
+
+        self.pseudo_checksum = 0
+
+        self.checksum_actual = None
+
+        self.set_16_bit_seg()
 
 
+
+
+    # need to call after creating a tcp header obj
+    # pass in values from ip_header object
+    def set_pseudo_header(self, iph_protocol : int, iph_src_ip_addr : str, iph_dest_ip : str, tcp_len : int):
+        self.protocol = iph_protocol
+        self.ip_src = iph_src_ip_addr
+        self.ip_dest = iph_dest_ip
+        self.tcp_len = tcp_len
+
+        self.psuedo_header_dict = {}
+
+        self.psuedo_header_dict[1] = pack('!H',self.protocol)
+
+        #===============================================
+        #split up 32 bit ip src address into two 16 bit segs
+        src_32_bits = pack('!4s', socket.inet_aton(self.ip_src))
+        src_unpacked_32_bits_split_two_16 = unpack('!HH', src_32_bits)
+        src_16_bit_p1 = src_unpacked_32_bits_split_two_16[0]
+        src_16_bit_p2 = src_unpacked_32_bits_split_two_16[1]
+
+        self.psuedo_header_dict[2] = src_16_bit_p1
+        self.psuedo_header_dict[3] = src_16_bit_p2
+
+        #===============================================
+        #split up 32 bit dest address into two 16 bit segs
+        dest_32_bits = pack('!4s', socket.inet_aton(self.ip_dest))
+        dest_unpacked_32_bits_split_two_16 = unpack('!HH', dest_32_bits)
+        dest_16_bit_p1 = dest_unpacked_32_bits_split_two_16[0]
+        dest_16_bit_p2 = dest_unpacked_32_bits_split_two_16[1]
+
+        self.psuedo_header_dict[4] = dest_16_bit_p1
+        self.psuedo_header_dict[5] = dest_16_bit_p2
+
+        #=================================================
+
+        self.psuedo_header_dict[6] = pack('!H',self.tcp_len)
+
+
+
+    def set_16_bit_seg(self):
+
+        self.dict_16_bits = {}
+
+        # first 16 bit seg (src port)
+        bytes_src_port = pack('!H',self.port_src)
+        self.dict_16_bits[1] = bytes_src_port
+        #==================================================
+
+        #second 16 bit seg (dest port)
+        bytes_dest_port = pack('!H', self.port_dest)
+        self.dict_16_bits[2] = bytes_dest_port
+        #==========================================
+
+        #generate first 32 bits
+        seq_num_32_bits = pack('L', self.num_seq)
+        seq_num_split_into_2_16_bit_ints = unpack('!HH', seq_num_32_bits)
+        seq_num_16_p1 = seq_num_split_into_2_16_bit_ints[0]
+        seq_num_16_p2 = seq_num_split_into_2_16_bit_ints[1]
+
+        #save in 16 bit increments for checksum
+        # third and fourth 16 bit seg (seq number)
+        self.dict_16_bits[3] = pack('!H',seq_num_16_p1)
+        self.dict_16_bits[4] = pack('!H',seq_num_16_p2)
+
+        #=======================================================
+
+        ack_num_32_bits = pack('L', self.num_ack)
+        ack_num_split_into_2_16_bit_ints = unpack('!HH',ack_num_32_bits)
+        ack_num_16_p1 = ack_num_split_into_2_16_bit_ints[0]
+        ack_num_16_p2 = ack_num_split_into_2_16_bit_ints[1]
+
+        # save in 16 bit increments for checksum
+        # fifth and sixth 16 bit seg (ack number)
+        self.dict_16_bits[5] = pack('!H',ack_num_16_p1)
+        self.dict_16_bits[6] = pack('!H',ack_num_16_p2)
+
+        #===========================================================
+
+        data_offset_reserve = get_val_data_offset_reserve(self.data_offset, self.rsv_3_bits)
+        lst_flags = [self.ns_flag, self.cwr_flag,
+                     self.ece_flag,self.urg_flag,self.ack_flag,
+                     self.psh_flag, self.rst_flag, self.syn_flag,self.fin_flag]
+
+        for i in range(len(lst_flags)):
+            data_offset_reserve = (data_offset_reserve << 1) + lst_flags[i]
+
+        # sevent 16 bit seg (data offset + reserve bits + flags
+        self.dict_16_bits[7] = pack('!H',data_offset_reserve)
+
+        #==============================================================
+
+        #eigth 16 bit seg (window size)
+        self.dict_16_bits[8] = pack('!H',self.window_size)
+        #================================================================
+
+        #9th seg ment pseudo checksum = 0 needed to calculate checksum
+        self.dict_16_bits[9] = pack('!H',self.pseudo_checksum)
+
+        #==============================================================
+
+        self.dict_16_bits[10] = pack('!H', self.urg_ptr)
+
+
+    #also sets self.checksum_actual attr and corrects dict bits
+    def calc_checksum(self):
+
+        lst_16_bit_segs = []
+
+        if (self.protocol == None):
+            raise ValueError('ERROR: Must call tcp_header.set_pseudoheader method before calculating checksum\n'
+                             'EXITING PROGRAM')
+
+        if (self.calc_checksum_flag == True):
+            raise RuntimeError("ERROR: checksum cannot be calculated more than once\n"
+                               "please CALL get_calculated_checksum method to get checksum value instead\n"
+                               "EXITING PROGRAM")
+
+        for i in range(1,7):
+            lst_16_bit_segs.append(self.psuedo_header_dict[i])
+
+        for j in range(1,11):
+            lst_16_bit_segs.append(self.dict_16_bits[j])
+
+        starter = 0
+
+        for i in range(len(lst_16_bit_segs)):
+            temp = unpack('!H', self.dict_16_bits[i])
+            current = binary_addition_checksum(temp[0], starter)
+            starter = current
+
+        mask = 2 ** 16 - 1
+        checksum = current & mask
+        checksum += 0x0001
+        checksum = 0xffff - checksum
+
+        self.calc_checksum_flag = True
+
+        self.checksum_actual = checksum
+
+        return self.checksum_actual
+
+    def get_calculated_checksum(self):
+        if (self.protocol == None):
+            raise ValueError('ERROR: Must call tcp_header.set_pseudoheader method before calling get_calculated_checksum\n'
+                             'EXITING PROGRAM')
+        if (self.calc_checksum_flag == False):
+            raise RuntimeError('Please call calc_checksum method before calling get_calculated_checksum\n'
+                               'EXITING PROGRAM')
+        return self.checksum_actual
 
 
 
