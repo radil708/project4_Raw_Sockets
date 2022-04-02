@@ -163,6 +163,13 @@ class tcp_header():
         self.set_16_bit_seg()
 
 
+    # CONSTANT p =6, const src
+
+    # generate TCP
+    # set pseudo header using constant
+    #
+
+    #
 
 
     # need to call after creating a tcp header obj
