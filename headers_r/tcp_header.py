@@ -314,4 +314,15 @@ class tcp_header():
                                'EXITING PROGRAM')
         return self.checksum_actual
 
+    def generate_tcp_packet(self):
+        if (self.calc_checksum_flag == False):
+            raise RuntimeError('ERROR: Please call calc_checksum method before generating tcp')
+
+        bytes_out = self.dict_16_bits[1]
+
+        for i in range(2,11):
+            bytes_out += self.dict_16_bits[i]
+
+        return bytes_out
+
 
