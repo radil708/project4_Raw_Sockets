@@ -4,6 +4,7 @@ checksum, urgent_ptr
 tcp_options
 payload
 """
+from project_constants import *
 from random import randint
 import struct
 import socket
@@ -81,7 +82,7 @@ class tcp_header:
         protocol = socket.IPPROTO_TCP
         tcp_length = len(self._tcp_header) + len(user_data)
 
-        psh = struct.pack('!4s4sBBH', source_address, dest_address, placeholder, protocol, tcp_length)
+        psh = struct.pack(TCP_HEADER_FORMAT, source_address, dest_address, placeholder, protocol, tcp_length)
         psh = psh + self._tcp_header + struct.pack(user_data)
 
         return psh
@@ -122,5 +123,35 @@ class ip_header:
     def assemble_ip_header(self):
         # the ! in the pack format string means network order
 
-        return struct.pack('!BBHHHBBH4s4s', self.ip_ihl_ver, self.ip_tos, self.ip_tot_len, self.ip_id, self.ip_frag_off, \
+        return struct.pack(IP_HEADER_FORMAT, self.ip_ihl_ver, self.ip_tos, self.ip_tot_len, self.ip_id, self.ip_frag_off, \
             self.ip_ttl, self.ip_proto, self.ip_check, self.ip_saddr, self.ip_daddr)
+
+class header_parser:
+    def __init__(self, total_header_received, data_received):
+        self.ip_header = struct.unpack(IP_HEADER_FORMAT, total_header_received[:20])
+        self.tcp_header = struct.unpack(TCP_HEADER_FORMAT, total_header_received[20:32])
+        self.data_length = self.get_data_length()
+        self.data_received = data_received
+
+        print('ip', self.ip_header)
+        print('tcp', self.tcp_header)
+        print('data received', self.data_received)
+
+    def get_data_length(self):
+        return self.ip_header[1] - struct.calcsize(IP_HEADER_FORMAT) - struct.calcsize(TCP_HEADER_FORMAT)
+
+    def parse_ip_header(self):
+        protocol = self.ip_header[6]
+
+    def parse_tcp_header(self):
+        seq_num_recvd = int(self.tcp_header[3])
+        ack_num_recvd = int(self.tcp_header[2])
+        return seq_num_rcvd, ack_num_recvd
+    
+    def verify_incoming_ip(self, incoming_ip_address):
+        pass 
+
+    def verify_checksum(self, packet):
+        pass 
+
+

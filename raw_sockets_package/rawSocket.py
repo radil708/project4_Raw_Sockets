@@ -1,7 +1,7 @@
 import socket as S
 from socket import AF_INET, SOCK_RAW, IPPROTO_RAW
-from project_constants import DOUBLE_LINE_DIVIDER
-from tcp_packets import tcp_header, ip_header
+from project_constants import *
+from headers import tcp_header, ip_header, header_parser
 import struct
 import time
 import random
@@ -19,9 +19,9 @@ class raw_socket():
 
         print('source ip:', source_ip)
 
-
         self.source_port = source_port
         self.dest_port = dest_port
+        self.initial_seq_num = random.randint(0, 50505) # this is random seq
 
         self.curr_seq_num = 0
         self.curr_ack_num = 0
@@ -65,71 +65,42 @@ class raw_socket():
         return ip_hdr + ftcp_hdr + struct.pack(data)
     
     def send_packet(self, packet):
-        #packet = self.create_packet_to_send(data)
-
-        # increase count to send more packets
-        #count = 3
-        
-        #for i in range(count):
         print('sending packet...')
-        # Send the packet finally - the port specified has no effect
-        # put this in a loop if you want to flood the target 
         self.socket_sender.sendto(packet, (self.dest_ip, self.dest_port))	
         print('send')
-        time.sleep(1)
             
     def receive_packet(self):
         self.socket_rcvr.settimeout(60)
         info_recvd = self.socket_rcvr.recv(65535)
         
         print("got from dest", info_recvd)
-        #packet = info_recvd[0]
-        #src_address = info_recvd[1]
-        header_size = struct.calcsize('!BBHHHBBH4s4s')
-        print('header size', header_size)
-        
-        #header only
-        header = struct.unpack('!BBHHHBBH4s4s', info_recvd[:20])
-        print('unpacked', header)
-        if (header[6] == 6):
-            protocol = "TCP"
-        elif (header[6] == 17):
-            protocol = "UDP"
-
-        print("Protocol: ", protocol)
-        #print("Address: ", src_address)
-        #print("Header: ", header)
-        return header
-
-    def parse_header_received(self, header):
-        if (header[6] == 6):
-            protocol = "TCP"
-        elif (header[6] == 17):
-            protocol = "UDP"
-        
-        #TODO: need to parse out the seq and ack here - Ramzi do here
-        seq_num, ack_num = 0, 0
-        # get the seq_num
-        # get the ack_num
-        return seq_num, ack_num
+        print('ip header size', struct.calcsize(IP_HEADER_FORMAT))
+        print('tcp header size', struct.calcsize(TCP_HEADER_FORMAT))
+        header = info_recvd[:32]
+        data = info_recvd[32:]
+        #print('header', info_recvd)
+        #print('ip', struct.unpack(IP_HEADER_FORMAT, header[:20]))
+        #print('tcp', struct.unpack(TCP_HEADER_FORMAT, header[20:32]))
+        return header, data
 
     def threeway_handshake(self):
         # set syn flag = 1 for initiating host
-        initial_seq_num = random.randint(0, 50505) # this is random seq
-#RAmzi current seq number and current flag numb
+        #RAmzi current seq number and current flag numb
 
-        initial_packet = self.create_packet_to_send(data="", syn_val=1, seq_num=initial_seq_num, ack_val=0, ack_num=0)
+        initial_packet = self.create_packet_to_send(data="", syn_val=1, seq_num=self.initial_seq_num, ack_val=0, ack_num=0)
         self.send_packet(initial_packet)
 
         # receive packet 
-        header_received = self.receive_packet()
-        seq_num_rcvd, ack_num = self.parse_header_received(header_received)
+        header_received, data_received = self.receive_packet()
 
+        parse_hdr = header_parser(header_received, data_received)
+        
+        seq_num, ack_num = parse_hdr.parse_tcp_header()
         if ack_num == initial_seq_num + 1:
             print('initial handshake received')
 
         # send with seq_num=initial_seq_num+1, ack = 1, and ack_num = seq_num_rcvd + 1
-        third_packet = self.create_packet_to_send(data="", syn_val=1, seq_num=initial_seq_num+1, ack_val=1, ack_num=seq_num_rcvd+1)
+        third_packet = self.create_packet_to_send(data="", syn_val=1, seq_num=self.initial_seq_num+1, ack_val=1, ack_num=seq_num_rcvd+1)
         self.send_packet(third_packet)
 
     def close_connection(self,display=False):

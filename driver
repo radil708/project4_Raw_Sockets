@@ -29,8 +29,9 @@ def main():
     if value_in == 0:
         drop_tcp_rst_cmd = "iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP"
         os.system(drop_tcp_rst_cmd)
-        source_ip = "192.168.81.128"
-
+        sock = s.socket(s.AF_INET, s.SOCK_DGRAM)
+        sock.connect(("8.8.8.8", 80))
+        source_ip = sock.getsockname()[0]
     else:
         source_ip = fetch_address_data_windows(False)
 
