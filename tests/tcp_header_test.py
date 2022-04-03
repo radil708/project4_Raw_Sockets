@@ -1,5 +1,5 @@
-from headers_r.packet_parser import packet_parser
-from headers_r.tcp_header import tcp_header
+from headers_r.packet_parser_r import packet_parser
+from headers_r.tcp_header_r import tcp_header
 import unittest
 
 class TestTCPHeader(unittest.TestCase):

@@ -1,5 +1,5 @@
 import unittest
-from headers_r import ip_header,tcp_header,packet_parser
+from headers_r import ip_header_r,tcp_header_r,packet_parser_r
 
 class FullHeaderTest(unittest.TestCase):
 

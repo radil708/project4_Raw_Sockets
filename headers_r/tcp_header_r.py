@@ -1,6 +1,6 @@
 import xml.dom
 from struct import pack,unpack
-from headers_r.ip_header import MAX_4_BIT_INT,MAX_8_BIT_INT,MAX_16_BIT_INT,MAX_13_BIT_INT, binary_addition_checksum
+from headers_r.ip_header_r import MAX_4_BIT_INT,MAX_8_BIT_INT,MAX_16_BIT_INT,MAX_13_BIT_INT, binary_addition_checksum
 import socket
 
 MAX_32_BIT_INT = 2147483647
