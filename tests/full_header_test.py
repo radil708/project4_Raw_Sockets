@@ -116,14 +116,8 @@ class FullHeaderTest(unittest.TestCase):
 
         self.assertEqual(test_tcp_header,tcp_byte_generated)
 
-
-
-
-
-
-
-
-
+        # testing verification of checksum
+        self.assertEqual(parsed_tcp_info['checksum'], tcp_obj.get_calculated_checksum())
 
 if __name__ == '__main__':
     unittest.main(verbosity=3)
