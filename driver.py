@@ -9,9 +9,9 @@ from project4_helper_functions import *
 from os import system
 
 def main():
-    all_args = sys.argv[1:]
+    #all_args = sys.argv[1:]
 
-    #all_args = [1]
+    all_args = [1]
 
     if len(all_args) < 1:
         raise ValueError("Missing Arg, 1: linux, 0: windows")

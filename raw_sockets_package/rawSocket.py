@@ -64,12 +64,12 @@ class raw_socket:
         print('data length in bytes', data_len, data)
 
         #FROM headers_r directory:
-        ip_hdr_bytes = self.get_basic_ip_hdr()
-        tcp_hdr_bytes = self.get_basic_tcp_hdr(data_len, seq_num, ack_num, syn_flag, ack_flag)
+        #ip_hdr_bytes = self.get_basic_ip_hdr()
+        #tcp_hdr_bytes = self.get_basic_tcp_hdr(data_len, seq_num, ack_num, syn_flag, ack_flag)
         
         #FROM headers.py:
-        #ip_hdr_bytes = ip_header_1(self.source_ip, self.dest_ip).assemble_ip_header()
-        #tcp_hdr_bytes = tcp_header_1(self.source_ip, self.source_port, self.dest_ip, self.dest_port, syn_flag, ack_flag, ack_num, seq_num).assemble_tcp_header()
+        ip_hdr_bytes = ip_header_1(self.source_ip, self.dest_ip).assemble_ip_header()
+        tcp_hdr_bytes = tcp_header_1(self.source_ip, self.source_port, self.dest_ip, self.dest_port, syn_flag, ack_flag, ack_num, seq_num).assemble_tcp_header()
         
         return ip_hdr_bytes + tcp_hdr_bytes + data
     

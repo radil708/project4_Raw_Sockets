@@ -11,7 +11,7 @@
   <component name="PyNamespacePackagesService">
     <option name="namespacePackageFolders">
       <list>
-        <option value="$MODULE_DIR$/headers" />
+        <option value="$MODULE_DIR$/headers_r" />
       </list>
     </option>
   </component>

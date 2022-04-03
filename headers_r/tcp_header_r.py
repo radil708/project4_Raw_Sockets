@@ -3,7 +3,7 @@ from struct import pack,unpack
 from headers_r.ip_header_r import MAX_4_BIT_INT,MAX_8_BIT_INT,MAX_16_BIT_INT,MAX_13_BIT_INT, binary_addition_checksum
 import socket
 
-MAX_32_BIT_INT = 2147483647
+MAX_32_BIT_INT = 4294967295
 
 ERROR_STR_APPEND = "FAILED TO CONSTRUCT TCP HEADER\nEXITING PROGRAM"
 
@@ -20,14 +20,15 @@ def get_val_data_offset_reserve(val_in_do : int, val_reserve_bits : int = 0):
 
     return new
 
-class tcp_header:
-    def __init__(self, src_port_in: int, dest_port_in: int, seq_num: int, ack_num: int, 
-                 ack_flag: int,sync_flag: int, data_offset_in: int=0,window_size_in: int=0, urg_ptr: int=0,
+class tcp_header():
+    def __init__(self, src_port_in: int, dest_port_in: int, seq_num: int, ack_num: int, data_offset_in: int,
+                 ack_flag: int,sync_flag: int, window_size_in: int, urg_ptr: int,
                  read_checksum: int = 0, ns_flag: int = 0, cwr_flag: int = 0 ,
                  ece_flag: int = 0,urge_flag: int = 0, psh_flag: int = 0,
-                 rst_flag: int = 0, fin_flag: int = 0,):
+                 rst_flag: int = 0, fin_flag: int = 0, tcp_data = ''):
 
         self.calc_checksum_flag = False
+        self.tcp_data = tcp_data
 
         #set up values for pseudo header
         self.protocol = None
@@ -58,7 +59,7 @@ class tcp_header:
         self.num_seq = seq_num
 
         if ack_num > MAX_32_BIT_INT:
-            raise ValueError(f'ERROR: ack num cannot be greater than f{MAX_32_BIT_INT}\n' + ERROR_STR_APPEND)
+            raise ValueError(f'ERROR: ack num cannot be greater than {MAX_32_BIT_INT}\n' + ERROR_STR_APPEND)
 
         #The receiving device maintains an acknowledgment number starting with zero.
         # It increments this number according to the number of bytes received.
@@ -169,11 +170,37 @@ class tcp_header:
 
     # need to call after creating a tcp header obj
     # pass in values from ip_header object
-    def set_pseudo_header(self, iph_protocol : int, iph_src_ip_addr : str, iph_dest_ip : str, tcp_len : int):
+    def set_pseudo_header(self, iph_protocol : int, iph_src_ip_addr : str, iph_dest_ip : str):
         self.protocol = iph_protocol
         self.ip_src = iph_src_ip_addr
         self.ip_dest = iph_dest_ip
-        self.tcp_len = tcp_len
+
+        header_temp = self.dict_16_bits[1]
+
+        for i in range(2, 11):
+            header_temp += self.dict_16_bits[i]
+
+        if type(self.tcp_data) == bytes:
+            self.tcp_len = len(header_temp) + len(self.tcp_data)
+            print(self.tcp_len)
+        elif type(self.tcp_data) == str:
+            self.tcp_len = len(header_temp) + len(self.tcp_data.encode('utf-8'))
+
+        '''
+        header_temp = self.dict_16_bits[1]
+
+        for i in range(2,11):
+            header_temp += self.dict_16_bits[i]
+
+        tcp_data_len = len(self.tcp_data)
+
+        # Padding zero
+        if (tcp_data_len % 2 == 1):
+            self.tcp_data += '0'
+            tcp_data_len += 1
+
+        self.tcp_len = len(header_temp) + tcp_data_len
+        '''
 
         self.psuedo_header_dict = {}
 
@@ -221,8 +248,11 @@ class tcp_header:
         #==========================================
 
         #generate first 32 bits
-        seq_num_32_bits = pack('L', self.num_seq)
+        seq_num_32_bits = pack('!L', self.num_seq)
+
         seq_num_split_into_2_16_bit_ints = unpack('!HH', seq_num_32_bits)
+
+        #seq_num_split_into_2_16_bit_ints = unpack('!HH', seq_num_32_bits)
         seq_num_16_p1 = seq_num_split_into_2_16_bit_ints[0]
         seq_num_16_p2 = seq_num_split_into_2_16_bit_ints[1]
 
@@ -233,7 +263,7 @@ class tcp_header:
 
         #=======================================================
 
-        ack_num_32_bits = pack('L', self.num_ack)
+        ack_num_32_bits = pack('!L', self.num_ack)
         ack_num_split_into_2_16_bit_ints = unpack('!HH',ack_num_32_bits)
         ack_num_16_p1 = ack_num_split_into_2_16_bit_ints[0]
         ack_num_16_p2 = ack_num_split_into_2_16_bit_ints[1]
@@ -333,7 +363,10 @@ class tcp_header:
         for i in range(2,11):
             bytes_out += self.dict_16_bits[i]
 
-        return bytes_out
+        if type(self.tcp_data) == bytes:
+            return bytes_out + self.tcp_data
+        elif type(self.tcp_data) == str:
+            return bytes_out + self.tcp_data.encode('utf-8')
 
 
 
