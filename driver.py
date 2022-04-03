@@ -35,7 +35,7 @@ def main():
     else:
         source_ip = fetch_address_data_windows(False)
 
-    source_port = 21792
+    source_port = 21793
     my_socket = raw_socket(TEST_HOST_2, TCP_PORT, source_ip, source_port, display=True)
     #my_socket.threeway_handshake()
     my_socket.close_connection()

@@ -49,9 +49,10 @@ def binary_addition_checksum(x : int, y : int,
 
     return int_result
 
-class ip_header():
-    def __init__(self, ip_source_in : str, ip_dest_in : str, packet_id_in, frag_flag_input, location_flag, offset_in, ttl, version_in=4, ihl_in=5,
-                 service_type_in=0, total_len_in=40, read_checksum_in = 0):
+class ip_header:
+    def __init__(self, ip_source_in : str, ip_dest_in : str, packet_id_in=0, 
+                frag_flag_input=0, location_flag=0, offset_in=0, ttl=225, version_in=4, ihl_in=5,
+                 service_type_in=0, total_len_in=20, read_checksum_in = 0):
 
         self.ip_source = ip_source_in
         self.ip_dest = ip_dest_in

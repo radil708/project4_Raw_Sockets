@@ -1,5 +1,8 @@
-from struct import pack,unpack
-from headers import ip_header
+from re import S
+from struct import calcsize, pack,unpack
+
+from rsa import verify
+from headers_r import ip_header
 
 def split_16_bits_into_two_8_bits(byte_in : bytes):
     return unpack('!BB',byte_in)
@@ -76,9 +79,18 @@ def tcp_split_16_bit_int_for_data_offset_flags(val_in : int):
 
 
 
-class packet_parser():
+class packet_parser:
+    def __init__(self, source_ip, source_port, dest_ip, dest_port, header_rcvd, data_rcvd) -> None:
+        self.source_ip = source_ip
+        self.dest_ip = dest_ip
+        self.source_port = source_port
+        self.dest_port = dest_port
 
-    def parse_ip_packet(self,ip_packet : bytes):
+        self.ip_hdr_dict = self.parse_ip_packet(header_rcvd[:20])
+        self.tcp_hdr_dict = self.parse_tcp_packet(header_rcvd[20:40])
+        self.data = self.parse_data(data_rcvd)
+
+    def parse_ip_packet(self, ip_packet : bytes):
         # grabs first 16 bit seg
         bytes_version_ihl_service = ip_packet[:2]
         int_version_ihl_service = split_16_bits_into_two_8_bits(bytes_version_ihl_service) # tuple of 2 8 bit segments
@@ -101,7 +113,7 @@ class packet_parser():
         #grab 5th 16 bit seg
         bytes_ttl_protocol_16 = ip_packet[8:10]
         read_time_to_live_int, read_protocol_int = split_16_bits_into_two_8_bits(bytes_ttl_protocol_16)
-
+        
         #grab 6th 16 bit seg
         bytes_checksum = ip_packet[10:12]
         read_checksum_int = unpack('!H',bytes_checksum)[0]
@@ -112,7 +124,12 @@ class packet_parser():
         s1,s2,s3,s4 = split_32_bit_int_into_4_8_bits_ints(ip_source_32_bit_int)
 
         read_ip_src_str = str(s1) + "." + str(s2) + "." + str(s3) + "." + str(s4)
+        print('\n\nsrc ip got', read_ip_src_str, 'actual', self.dest_ip)
 
+        if not self.verify_source_ip(read_ip_src_str):
+            print('not verified')
+        else:
+            print('verified')
 
         #grab 32 bit seg of dest ip
         bytes_ip_dest = ip_packet[16:20]
@@ -120,7 +137,12 @@ class packet_parser():
         d1,d2,d3,d4 = split_32_bit_int_into_4_8_bits_ints(ip_dest_32_bit_int)
 
         read_ip_dest_str = str(d1) + "." + str(d2) + "." + str(d3) + "." + str(d4)
+        print('dest ip got', read_ip_dest_str, 'actual', self.source_ip)
 
+        if not self.verify_dest_ip(read_ip_dest_str):
+            print('not verified')
+        else:
+            print('verified')
         dict_info = {}
 
         dict_info['version'] = read_version_int
@@ -138,7 +160,15 @@ class packet_parser():
         dict_info['ip_dest'] = read_ip_dest_str
 
         return dict_info
+    
+    def verify_source_ip(self, src_ip_rcvd):
+        return src_ip_rcvd == self.dest_ip
+    
+    def verify_dest_ip(self, dst_ip_rcvd):
+        return dst_ip_rcvd == self.source_ip
 
+    def get_total_len(self):
+        return 
     def parse_ip_packet_and_gen(self, ip_packet : bytes):
         read_values = self.parse_ip_packet(ip_packet)
 
@@ -217,6 +247,14 @@ class packet_parser():
         dict_read_values['urg_ptr'] = read_urg_ptr
 
         return dict_read_values
+    
+    def parse_data(self, data):
+        len_expected = self.ip_hdr_dict['total_len'] - 40
+        format = '!' + str(len_expected) + 's'
+        data = pack(format, data)
+        print('data size', calcsize(data), 'len exp', len_expected)
+        return unpack(format, data)
+
 
 
 
