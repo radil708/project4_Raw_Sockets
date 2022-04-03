@@ -2,7 +2,7 @@ import socket as S
 from socket import AF_INET, SOCK_RAW, IPPROTO_RAW
 from wsgiref import headers
 from project_constants import *
-from headers_r import tcp_header, ip_header, packet_parser
+from headers_r import tcp_header_r, ip_header_r, packet_parser_r
 from raw_sockets_package.headers import *
 import struct
 import time
@@ -48,14 +48,14 @@ class raw_socket:
                   DOUBLE_LINE_DIVIDER)
 
     def get_basic_tcp_hdr(self, data_len, seq_num, ack_num, syn_flag, ack_flag):
-        tcp_hdr = tcp_header.tcp_header(self.source_port, self.dest_port, seq_num, ack_num, syn_flag, ack_flag)
+        tcp_hdr = tcp_header_r.tcp_header(self.source_port, self.dest_port, seq_num=seq_num, ack_num=ack_num, ack_flag=ack_flag, sync_flag=syn_flag)
         psh = tcp_hdr.set_pseudo_header(S.IPPROTO_TCP, self.source_ip, self.dest_ip, 20+data_len)
         check = tcp_hdr.calc_checksum()
 
         return tcp_hdr.generate_tcp_packet()
 
     def get_basic_ip_hdr(self):
-        ip_hdr = ip_header.ip_header(self.source_ip, self.dest_ip)
+        ip_hdr = ip_header_r.ip_header(self.source_ip, self.dest_ip)
         return ip_hdr.generate_ip_packet()
     
     def create_packet_to_send(self, data, seq_num, ack_num, syn_flag, ack_flag):
@@ -64,12 +64,12 @@ class raw_socket:
         print('data length in bytes', data_len, data)
 
         #FROM headers_r directory:
-        #ip_hdr_bytes = self.get_basic_ip_hdr()
-        #tcp_hdr_bytes = self.get_basic_tcp_hdr(data_len, seq_num, ack_num, syn_flag, ack_flag)
+        ip_hdr_bytes = self.get_basic_ip_hdr()
+        tcp_hdr_bytes = self.get_basic_tcp_hdr(data_len, seq_num, ack_num, syn_flag, ack_flag)
         
         #FROM headers.py:
-        ip_hdr_bytes = ip_header_1(self.source_ip, self.dest_ip).assemble_ip_header()
-        tcp_hdr_bytes = tcp_header_1(self.source_ip, self.source_port, self.dest_ip, self.dest_port, syn_flag, ack_flag, ack_num, seq_num).assemble_tcp_header()
+        #ip_hdr_bytes = ip_header_1(self.source_ip, self.dest_ip).assemble_ip_header()
+        #tcp_hdr_bytes = tcp_header_1(self.source_ip, self.source_port, self.dest_ip, self.dest_port, syn_flag, ack_flag, ack_num, seq_num).assemble_tcp_header()
         
         return ip_hdr_bytes + tcp_hdr_bytes + data
     

@@ -2,7 +2,7 @@ from re import S
 from struct import calcsize, pack,unpack
 
 from rsa import verify
-from headers_r import ip_header
+from headers_r import ip_header_r
 
 def split_16_bits_into_two_8_bits(byte_in : bytes):
     return unpack('!BB',byte_in)
