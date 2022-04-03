@@ -20,7 +20,7 @@ class FullHeaderTest(unittest.TestCase):
         packet = ip_header + tcp_header
 
         self.fullpacket = packet
-        self.parser = packet_parser.packet_parser()
+        self.parser = packet_parser_r.packet_parser()
 
     def test_ip_read(self):
         test_ip_header = self.fullpacket[:20]
@@ -45,7 +45,7 @@ class FullHeaderTest(unittest.TestCase):
         test_ip_header = self.fullpacket[:20]
         parsed_packet_info = self.parser.parse_ip_packet(test_ip_header)
 
-        new_ip_header_obj = ip_header.ip_header(ip_source_in=parsed_packet_info['ip_src'],
+        new_ip_header_obj = ip_header_r.ip_header(ip_source_in=parsed_packet_info['ip_src'],
                                                 ip_dest_in=parsed_packet_info['ip_dest'],
                                                 packet_id_in=parsed_packet_info['packet_id'],
                                                 frag_flag_input=parsed_packet_info['fragmentation_flag'],
@@ -96,7 +96,7 @@ class FullHeaderTest(unittest.TestCase):
         test_tcp_header = self.fullpacket[20:]
         parsed_tcp_info = self.parser.parse_tcp_packet(test_tcp_header)
 
-        tcp_obj = tcp_header.tcp_header(src_port_in=parsed_tcp_info['port_src'],
+        tcp_obj = tcp_header_r.tcp_header(src_port_in=parsed_tcp_info['port_src'],
                                         dest_port_in=parsed_tcp_info['port_dest'],
                                         seq_num=parsed_tcp_info['seq_num'],
                                         ack_num=parsed_tcp_info['ack_num'],
