@@ -1,17 +1,17 @@
 import struct
 import logging
 
-from headers_r import ip_header
-from headers_r import packet_parser
+from headers_r import ip_header_r
+from headers_r import packet_parser_r
 import unittest
 
 class TestIPHeader(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.ip_header = ip_header.ip_header(ip_source_in="10.10.10.2",
+        self.ip_header = ip_header_r.ip_header(ip_source_in="10.10.10.2",
                                              ip_dest_in="10.10.10.1",packet_id_in=43981,
                                              frag_flag_input=0,location_flag=0,offset_in=0,ttl=64)
-        self.packet_parser = packet_parser.packet_parser()
+        self.packet_parser = packet_parser_r.packet_parser()
 
 
     def test_checksum(self):
@@ -32,7 +32,7 @@ class TestIPHeader(unittest.TestCase):
         self.assertEqual(test_ip_header_bytes, self.ip_header.generate_ip_packet())
 
     def test_parser_1(self):
-        ip_ex1 = ip_header.ip_header(ip_source_in="10.10.10.2",
+        ip_ex1 = ip_header_r.ip_header(ip_source_in="10.10.10.2",
                                      ip_dest_in="10.10.10.1",
                                      packet_id_in=43981,frag_flag_input=0,location_flag=0,offset_in=0,ttl=64)
         gen_packet = ip_ex1.generate_ip_packet()
@@ -52,7 +52,7 @@ class TestIPHeader(unittest.TestCase):
         self.assertEqual("10.10.10.1", read_values['ip_dest'])
 
     def test_ip_parser_2(self):
-        ip_ex2 = ip_header.ip_header(ip_source_in="198.120.10.2", ihl_in=6,
+        ip_ex2 = ip_header_r.ip_header(ip_source_in="198.120.10.2", ihl_in=6,
                                      ip_dest_in="10.142.5.1",
                                      packet_id_in=13, frag_flag_input=1, location_flag=1, offset_in=52, ttl=32)
         gen_packet_2 = ip_ex2.generate_ip_packet()

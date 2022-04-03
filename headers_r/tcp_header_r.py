@@ -1,5 +1,6 @@
+import xml.dom
 from struct import pack,unpack
-from headers_r.ip_header import MAX_4_BIT_INT,MAX_8_BIT_INT,MAX_16_BIT_INT,MAX_13_BIT_INT, binary_addition_checksum
+from headers_r.ip_header_r import MAX_4_BIT_INT,MAX_8_BIT_INT,MAX_16_BIT_INT,MAX_13_BIT_INT, binary_addition_checksum
 import socket
 
 MAX_32_BIT_INT = 2147483647
@@ -13,14 +14,15 @@ def is_valid_control_flag_val(ctrl_flg_val):
         return True
 
 def get_val_data_offset_reserve(val_in_do : int, val_reserve_bits : int = 0):
-    if val_in_do.bit_length() < 7:
-        new = (val_in_do << (7 - val_in_do.bit_length()))
+    if val_in_do.bit_length() < 6:
+        new = (val_in_do << (6 - val_in_do.bit_length()))
+
 
     return new
 
-class tcp_header:
-    def __init__(self, src_port_in: int, dest_port_in: int, seq_num: int, ack_num: int, 
-                 sync_flag: int, ack_flag: int, data_offset_in: int=0, window_size_in: int = 0, urg_ptr: int = 0,
+class tcp_header():
+    def __init__(self, src_port_in: int, dest_port_in: int, seq_num: int, ack_num: int, data_offset_in: int,
+                 ack_flag: int,sync_flag: int, window_size_in: int, urg_ptr: int,
                  read_checksum: int = 0, ns_flag: int = 0, cwr_flag: int = 0 ,
                  ece_flag: int = 0,urge_flag: int = 0, psh_flag: int = 0,
                  rst_flag: int = 0, fin_flag: int = 0,):
@@ -163,13 +165,6 @@ class tcp_header:
         self.set_16_bit_seg()
 
 
-    # CONSTANT p =6, const src
-
-    # generate TCP
-    # set pseudo header using constant
-    #
-
-    #
 
 
     # need to call after creating a tcp header obj
@@ -191,8 +186,8 @@ class tcp_header:
         src_16_bit_p1 = src_unpacked_32_bits_split_two_16[0]
         src_16_bit_p2 = src_unpacked_32_bits_split_two_16[1]
 
-        self.psuedo_header_dict[2] = src_16_bit_p1
-        self.psuedo_header_dict[3] = src_16_bit_p2
+        self.psuedo_header_dict[2] = pack('!H',src_16_bit_p1)
+        self.psuedo_header_dict[3] = pack('!H', src_16_bit_p2)
 
         #===============================================
         #split up 32 bit dest address into two 16 bit segs
@@ -201,8 +196,8 @@ class tcp_header:
         dest_16_bit_p1 = dest_unpacked_32_bits_split_two_16[0]
         dest_16_bit_p2 = dest_unpacked_32_bits_split_two_16[1]
 
-        self.psuedo_header_dict[4] = dest_16_bit_p1
-        self.psuedo_header_dict[5] = dest_16_bit_p2
+        self.psuedo_header_dict[4] = pack('!H',dest_16_bit_p1)
+        self.psuedo_header_dict[5] = pack('!H',dest_16_bit_p2)
 
         #=================================================
 
@@ -221,6 +216,7 @@ class tcp_header:
 
         #second 16 bit seg (dest port)
         bytes_dest_port = pack('!H', self.port_dest)
+
         self.dict_16_bits[2] = bytes_dest_port
         #==========================================
 
@@ -250,6 +246,7 @@ class tcp_header:
         #===========================================================
 
         data_offset_reserve = get_val_data_offset_reserve(self.data_offset, self.rsv_3_bits)
+
         lst_flags = [self.ns_flag, self.cwr_flag,
                      self.ece_flag,self.urg_flag,self.ack_flag,
                      self.psh_flag, self.rst_flag, self.syn_flag,self.fin_flag]
@@ -294,21 +291,27 @@ class tcp_header:
         for j in range(1,11):
             lst_16_bit_segs.append(self.dict_16_bits[j])
 
+        x = lst_16_bit_segs[0]
+        for j in range(1,len(lst_16_bit_segs)):
+            x += lst_16_bit_segs[j]
+
         starter = 0
 
         for i in range(len(lst_16_bit_segs)):
-            temp = unpack('!H', self.dict_16_bits[i])
+            temp = unpack('!H', lst_16_bit_segs[i])
             current = binary_addition_checksum(temp[0], starter)
             starter = current
 
         mask = 2 ** 16 - 1
         checksum = current & mask
-        checksum += 0x0001
+        checksum = checksum + 0x0001
         checksum = 0xffff - checksum
 
         self.calc_checksum_flag = True
 
         self.checksum_actual = checksum
+
+        self.dict_16_bits[9] = pack('!H',self.checksum_actual)
 
         return self.checksum_actual
 
@@ -331,5 +334,12 @@ class tcp_header:
             bytes_out += self.dict_16_bits[i]
 
         return bytes_out
+
+
+
+
+
+
+
 
 
