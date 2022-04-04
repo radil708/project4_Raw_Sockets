@@ -1,5 +1,4 @@
 import socket as S
-from socket import AF_INET, SOCK_RAW, IPPROTO_RAW
 from wsgiref import headers
 from project_constants import *
 from headers_r import tcp_header_r, ip_header_r, packet_parser_r
@@ -12,9 +11,12 @@ class raw_socket:
 
     def __init__(self, host_name, dest_port, source_ip, source_port, display=False):
         # try/except block for each socket creation
-        self.socket_sender = S.socket(AF_INET, SOCK_RAW, IPPROTO_RAW)
+        self.socket_sender = S.socket(S.AF_INET, S.SOCK_RAW, S.IPPROTO_RAW)
+        self.socket_sender.setsockopt(S.IPPROTO_IP, S.IP_HDRINCL, 1)
+
         self.socket_rcvr = S.socket(S.AF_INET, S.SOCK_RAW, S.IPPROTO_TCP)
-        
+        #self.socket_rcvr.bind(S.IPPROTO_IP)
+
         self.host_name = host_name
         self.source_ip = source_ip
         self.dest_ip = S.gethostbyname(self.host_name)
@@ -25,6 +27,7 @@ class raw_socket:
         print('host name', host_name, 'self host name', self.host_name)
         print('source ip:', self.source_ip, 'source_port', self.source_port)
         print('dest ip', self.dest_ip, 'dest port', self.dest_port)
+        
         self.curr_seq_num = 0
         self.curr_ack_num = 0
 
@@ -49,7 +52,8 @@ class raw_socket:
 
     def get_basic_tcp_hdr(self, data_len, seq_num, ack_num, syn_flag, ack_flag):
         tcp_hdr = tcp_header_r.tcp_header(self.source_port, self.dest_port, seq_num=seq_num, ack_num=ack_num, ack_flag=ack_flag, sync_flag=syn_flag)
-        psh = tcp_hdr.set_pseudo_header(S.IPPROTO_TCP, self.source_ip, self.dest_ip, 20+data_len)
+        #data_len += 20
+        psh = tcp_hdr.set_pseudo_header(S.IPPROTO_TCP, self.source_ip, self.dest_ip)
         check = tcp_hdr.calc_checksum()
 
         return tcp_hdr.generate_tcp_packet()
@@ -64,27 +68,27 @@ class raw_socket:
         print('data length in bytes', data_len, data)
 
         #FROM headers_r directory:
-        #ip_hdr_bytes = self.get_basic_ip_hdr()
-        #tcp_hdr_bytes = self.get_basic_tcp_hdr(data_len, seq_num, ack_num, syn_flag, ack_flag)
+        ip_hdr_bytes = self.get_basic_ip_hdr()
+        tcp_hdr_bytes = self.get_basic_tcp_hdr(data_len, seq_num, ack_num, syn_flag, ack_flag)
         
         #FROM headers.py:
-        ip_hdr_bytes = ip_header_1(self.source_ip, self.dest_ip).assemble_ip_header()
-        tcp_hdr_bytes = tcp_header_1(self.source_ip, self.source_port, self.dest_ip, self.dest_port, syn_flag, ack_flag, ack_num, seq_num).assemble_tcp_header()
+        #ip_hdr_bytes = ip_header_1(self.source_ip, self.dest_ip).assemble_ip_header()
+        #tcp_hdr_bytes = tcp_header_1(self.source_ip, self.source_port, self.dest_ip, self.dest_port, syn_flag, ack_flag, ack_num, seq_num).assemble_tcp_header()
         
         return ip_hdr_bytes + tcp_hdr_bytes + data
     
     def send_packet(self, packet):
         print('sending packet...')
         try:
-            #self.socket_sender.sendto(packet, (self.dest_ip, self.dest_port))	
-            self.socket_sender.send(packet)
+            self.socket_sender.sendto(packet, (self.dest_ip, self.dest_port))	
+            #self.socket_sender.send(packet)
         except Exception as e:
             print('sending didnt work')
         print('send')
             
     def receive_packet(self):
         self.socket_rcvr.settimeout(60)
-        info_recvd = self.socket_rcvr.recv(65535)
+        info_recvd = self.socket_rcvr.recv(4096)
         
         print("got from dest total len", len(info_recvd))
 
@@ -106,7 +110,7 @@ class raw_socket:
         
         # receive 5 packets until we get what we want
         x = 0
-        while x < 5:
+        while x < 15:
             # receive packet 
             header_received, data_received = self.receive_packet()
             #FROM headers_r dir
@@ -119,9 +123,9 @@ class raw_socket:
             
             #print('ip headers from rcvd packet', parser.ip_hdr_dict)
             if parser.ip_hdr_dict['protocol'] != 6: continue
-            if parser.tcp_hdr_dict['port_src'] != self.dest_port:
+            if parser.tcp_hdr_dict['port_src'] == self.dest_port:
                 print('wrong port')
-                continue
+                
             #print('tcp headers from rcvd packet', parser.tcp_hdr_dict)
             ack_num_rcvd = parser.tcp_hdr_dict['ack_num']
             seq_num_rcvd = parser.tcp_hdr_dict['seq_num']
@@ -133,8 +137,9 @@ class raw_socket:
                 print('initial handshake received')
                 break
 
-            if parser.tcp_hdr_dict['port_dest'] != self.source_port: 
-                continue
+            if parser.tcp_hdr_dict['port_dest'] == self.source_port or \
+                parser.ip_hdr_dict['ip_src'] == self.dest_ip: 
+                break
 
             x+=1
 

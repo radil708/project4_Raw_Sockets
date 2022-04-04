@@ -185,7 +185,7 @@ class tcp_header:
             print(self.tcp_len)
         elif type(self.tcp_data) == str:
             self.tcp_len = len(header_temp) + len(self.tcp_data.encode('utf-8'))
-
+        self.tcp_len = 40
         '''
         header_temp = self.dict_16_bits[1]
 
