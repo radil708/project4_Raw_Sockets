@@ -191,12 +191,12 @@ class packet_parser:
         # get first 16 bits (src port)
         bytes_src_port = ip_packet[:2]
         read_src_port = (unpack('!H', bytes_src_port))[0]
-
+        print('expected port', self.dest_port, 'got', read_src_port)
         #===============================================
         # get second 16 bits 9dest port
         bytes_dest_port = ip_packet[2:4]
         read_dest_port = (unpack('!H', bytes_dest_port))[0]
-
+        print('expected port', self.source_port, 'got', read_dest_port)
         #==============================================
         #get the third seg (one 32 bit seq number)
         bytes_seq_num = ip_packet[4:8]

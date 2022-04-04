@@ -17,14 +17,14 @@ class raw_socket:
         
         self.host_name = host_name
         self.source_ip = source_ip
-        self.dest_ip = S.gethostbyname(host_name)
+        self.dest_ip = S.gethostbyname(self.host_name)
 
-        print('source ip:', source_ip, 'source_port', source_port)
-        print('dest ip', self.dest_ip, 'dest port', dest_port)
         self.source_port = source_port
         self.dest_port = dest_port
         self.initial_seq_num = random.randint(0, 50505) # this is random seq
-
+        print('host name', host_name, 'self host name', self.host_name)
+        print('source ip:', self.source_ip, 'source_port', self.source_port)
+        print('dest ip', self.dest_ip, 'dest port', self.dest_port)
         self.curr_seq_num = 0
         self.curr_ack_num = 0
 
@@ -115,7 +115,9 @@ class raw_socket:
             
             #print('ip headers from rcvd packet', parser.ip_hdr_dict)
             if parser.ip_hdr_dict['protocol'] != 6: continue
-
+            if parser.tcp_hdr_dict['port_src'] != self.dest_port:
+                print('wrong port')
+                continue
             #print('tcp headers from rcvd packet', parser.tcp_hdr_dict)
             ack_num_rcvd = parser.tcp_hdr_dict['ack_num']
             seq_num_rcvd = parser.tcp_hdr_dict['seq_num']
@@ -127,7 +129,8 @@ class raw_socket:
                 print('initial handshake received')
                 break
 
-            #if parser.tcp_hdr_dict['port_dest'] != self.source_port: continue
+            if parser.tcp_hdr_dict['port_dest'] != self.source_port: 
+                continue
 
             x+=1
 
