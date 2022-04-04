@@ -12,10 +12,11 @@ class raw_socket:
     def __init__(self, host_name, dest_port, source_ip, source_port, display=False):
         # try/except block for each socket creation
         self.socket_sender = S.socket(S.AF_INET, S.SOCK_RAW, S.IPPROTO_RAW)
-        self.socket_sender.setsockopt(S.IPPROTO_IP, S.IP_HDRINCL, 1)
+        #self.socket_sender.setsockopt(S.IPPROTO_IP, S.IP_HDRINCL, 0)
 
         self.socket_rcvr = S.socket(S.AF_INET, S.SOCK_RAW, S.IPPROTO_TCP)
-        #self.socket_rcvr.bind(S.IPPROTO_IP)
+        self.socket_rcvr.setsockopt(S.IPPROTO_IP, S.IP_HDRINCL, 1)
+        #self.socket_rcvr.bind((S.IPPROTO_IP,0))
 
         self.host_name = host_name
         self.source_ip = source_ip
@@ -31,12 +32,12 @@ class raw_socket:
         self.curr_seq_num = 0
         self.curr_ack_num = 0
 
-        self.connect_sender_socket(display)
+        #self.connect_sender_socket(display)
         self.threeway_handshake()
 
     def connect_sender_socket(self, display=False):
         try:
-            self.socket_sender.connect((self.dest_ip, self.dest_port))
+            self.socket_sender.connect(self.dest_ip, self.dest_port)
         except:
             if display == True:
                 print("ERROR: Socket Sender failed to connect:\n"
@@ -70,7 +71,9 @@ class raw_socket:
         #FROM headers_r directory:
         ip_hdr_bytes = self.get_basic_ip_hdr()
         tcp_hdr_bytes = self.get_basic_tcp_hdr(data_len, seq_num, ack_num, syn_flag, ack_flag)
-        
+        header = ip_hdr_bytes + tcp_hdr_bytes
+        parser = packet_parser_r.packet_parser(self.source_ip, self.source_port, self.dest_ip, self.dest_port, header, " ")
+        print("SENDING")
         #FROM headers.py:
         #ip_hdr_bytes = ip_header_1(self.source_ip, self.dest_ip).assemble_ip_header()
         #tcp_hdr_bytes = tcp_header_1(self.source_ip, self.source_port, self.dest_ip, self.dest_port, syn_flag, ack_flag, ack_num, seq_num).assemble_tcp_header()
