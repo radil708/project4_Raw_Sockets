@@ -20,9 +20,9 @@ def get_val_data_offset_reserve(val_in_do : int, val_reserve_bits : int = 0):
 
     return new
 
-class tcp_header():
-    def __init__(self, src_port_in: int, dest_port_in: int, seq_num: int, ack_num: int, data_offset_in: int,
-                 ack_flag: int,sync_flag: int, window_size_in: int, urg_ptr: int,
+class tcp_header:
+    def __init__(self, src_port_in: int, dest_port_in: int, seq_num: int, ack_num: int, 
+                 ack_flag: int, sync_flag: int, data_offset_in: int = 0, window_size_in: int = 0, urg_ptr: int = 0,
                  read_checksum: int = 0, ns_flag: int = 0, cwr_flag: int = 0 ,
                  ece_flag: int = 0,urge_flag: int = 0, psh_flag: int = 0,
                  rst_flag: int = 0, fin_flag: int = 0, tcp_data = ''):

@@ -9,9 +9,9 @@ from project4_helper_functions import *
 from os import system
 
 def main():
-    #all_args = sys.argv[1:]
+    all_args = sys.argv[1:]
 
-    all_args = [1]
+    #all_args = [1]
 
     if len(all_args) < 1:
         raise ValueError("Missing Arg, 1: linux, 0: windows")
@@ -27,8 +27,8 @@ def main():
     source_ip = None
 
     if value_in == 0:
-        drop_tcp_rst_cmd = "iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP"
-        os.system(drop_tcp_rst_cmd)
+        #drop_tcp_rst_cmd = "iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP"
+        #os.system(drop_tcp_rst_cmd)
         sock = s.socket(s.AF_INET, s.SOCK_DGRAM)
         sock.connect(("8.8.8.8", 80))
         source_ip = sock.getsockname()[0]
@@ -36,7 +36,7 @@ def main():
         source_ip = fetch_address_data_windows(False)
 
     source_port = 21793
-    my_socket = raw_socket(TEST_HOST_2, TCP_PORT, source_ip, source_port, display=True)
+    my_socket = raw_socket(TEST_HOST_1, TCP_PORT, source_ip, source_port, display=True)
     #my_socket.threeway_handshake()
     my_socket.close_connection()
 

@@ -20,7 +20,7 @@ class raw_socket:
         self.dest_ip = S.gethostbyname(host_name)
 
         print('source ip:', source_ip, 'source_port', source_port)
-
+        print('dest ip', self.dest_ip, 'dest port', dest_port)
         self.source_port = source_port
         self.dest_port = dest_port
         self.initial_seq_num = random.randint(0, 50505) # this is random seq
@@ -106,12 +106,12 @@ class raw_socket:
             # receive packet 
             header_received, data_received = self.receive_packet()
             #FROM headers_r dir
-            #parser = packet_parser.packet_parser(self.source_ip, self.source_port, self.dest_ip, self.dest_port, header_received, data_received)
+            parser = packet_parser_r.packet_parser(self.source_ip, self.source_port, self.dest_ip, self.dest_port, header_received, data_received)
             #ip_rcvd_dict = parser.parse_ip_packet(header_received[:20])
             #tcp_rcvd_dict = parser.parse_tcp_packet(header_received[20:40])
             
             #FROM headers.py
-            parser = header_parser(self.source_ip, self.source_port, self.dest_ip, self.dest_port, header_received, data_received)
+            #parser = header_parser(self.source_ip, self.source_port, self.dest_ip, self.dest_port, header_received, data_received)
             
             #print('ip headers from rcvd packet', parser.ip_hdr_dict)
             if parser.ip_hdr_dict['protocol'] != 6: continue
