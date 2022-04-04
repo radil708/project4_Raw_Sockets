@@ -75,7 +75,11 @@ class raw_socket:
     
     def send_packet(self, packet):
         print('sending packet...')
-        self.socket_sender.sendto(packet, (self.dest_ip, self.dest_port))	
+        try:
+            #self.socket_sender.sendto(packet, (self.dest_ip, self.dest_port))	
+            self.socket_sender.send(packet)
+        except Exception as e:
+            print('sending didnt work')
         print('send')
             
     def receive_packet(self):
